@@ -1,25 +1,40 @@
 package ru.netology.repository;
 
+import org.springframework.stereotype.Repository;
 import ru.netology.model.Post;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 // Stub
 public class PostRepository {
-  public List<Post> all() {
-    return Collections.emptyList();
-  }
+    private final Map<Long, Post> dataBase = new HashMap<>();
+   private AtomicLong idHolder = new AtomicLong(0);
 
-  public Optional<Post> getById(long id) {
-    return Optional.empty();
-  }
+    public List<Post> all() {
+        return new ArrayList<>(dataBase.values());
+    }
 
-  public Post save(Post post) {
-    return post;
-  }
+    public Optional<Post> getById(long id) {
+        return Optional.ofNullable(dataBase.get(id));
+    }
 
-  public void removeById(long id) {
-  }
+    public Post save(Post post) {
+      if(post.getId()==0){
+        long id = idHolder.incrementAndGet();
+        post.setId(id);
+        this.dataBase.put(id, post);
+      }else{
+        Optional<Post> optionalPost = getById(post.getId());
+        Post oldPost = optionalPost.orElseThrow(()-> new NoSuchElementException("id "+post.getId()+" not found"));
+        oldPost.setContent(post.getContent());
+      }
+      return post;
+    }
+
+    public void removeById(long id) {
+      dataBase.remove(id);
+    }
 }
